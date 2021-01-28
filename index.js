@@ -4,12 +4,12 @@ function createStore(reducer) {
 
   // 1. The state
   let state;
-  let listeners = [];
 
   // 2. Get the state
   const getState = () => state;
 
   // 3. Listen to changes on the state
+  let listeners = [];
   const subscribe = (listener) => {
     listeners.push(listener);
 
@@ -34,7 +34,6 @@ function createStore(reducer) {
   };
 }
 
-
 // APP CODE
 // Use action type constants to avoid typos
 const ADD_TODO = "ADD_TODO";
@@ -45,6 +44,42 @@ const REMOVE_GOAL = "REMOVE_GOAL";
 
 // Rule #1 Actions - coordinate state changes through a 'playbook' of actions
 
+// Action Creators
+const addTodoAction = (todo) => {
+  return {
+    type: ADD_TODO,
+    todo,
+  };
+};
+
+const removeTodoAction = (id) => {
+  return {
+    type: REMOVE_TODO,
+    id,
+  };
+};
+
+const toggleTodoAction = (id) => {
+  return {
+    type: TOGGLE_TODO,
+    id,
+  };
+};
+
+const addGoalAction = (goal) => {
+  return {
+    type: ADD_GOAL,
+    goal,
+  };
+};
+
+const removeGoalAction = (id) => {
+  return {
+    type: REMOVE_GOAL,
+    id,
+  };
+};
+
 //Rule #2 Pure Functions - has 3 characteristics:
 /*
     1. They always return the same result if the same arguments are passed in.
@@ -52,7 +87,7 @@ const REMOVE_GOAL = "REMOVE_GOAL";
     3.  Never produce side effects (e.g. Ajax requests, mutate, etc.)
 */
 
-// Reducer function
+// Reducer function - a pure function
 function todos(state = [], action) {
   switch (action.type) {
     case ADD_TODO:
@@ -73,7 +108,7 @@ function todos(state = [], action) {
   }
 }
 
-// Reducer function
+// Reducer function - a pure function
 function goals(state = [], action) {
   switch (action.type) {
     case ADD_GOAL:
@@ -88,14 +123,12 @@ function goals(state = [], action) {
 }
 
 // Root reducer
-function app (state = {}, action) {
+function app(state = {}, action) {
   return {
     todos: todos(state.todos, action),
-    goals: goals(state.goals, action)
-  }
+    goals: goals(state.goals, action),
+  };
 }
-
-
 
 const store = createStore(app);
 
@@ -106,60 +139,41 @@ const unsubscribe = store.subscribe(() => {
 // unsubscribe();  --> Unsubscribes listener fxn
 
 // Updating the store
-store.dispatch({
-  type: ADD_TODO,
-  todo: {
+store.dispatch(
+  addTodoAction({
     id: 0,
-    name: 'Walk the dog',
+    name: "Walk the dog",
     complete: false,
-  }
-})
+  })
+);
 
-store.dispatch({
-  type: ADD_TODO,
-  todo: {
+store.dispatch(
+  addTodoAction({
     id: 1,
-    name: 'Wash the car',
+    name: "Wash the car",
     complete: false,
-  }
-})
+  })
+);
 
-store.dispatch({
-  type: ADD_TODO,
-  todo: {
+store.dispatch(
+  addTodoAction({
     id: 2,
-    name: 'Go to the gym',
+    name: "Go to the gym",
     complete: true,
-  }
-})
+  })
+);
 
-store.dispatch({
-  type: REMOVE_TODO,
-  id: 1
-})
+store.dispatch(removeTodoAction(1));
 
-store.dispatch({
-  type: TOGGLE_TODO,
-  id: 0
-})
+store.dispatch(toggleTodoAction(0));
 
-store.dispatch({
-  type: ADD_GOAL,
-  goal: {
-    id: 0,
-    name: 'Learn Redux'
-  }
-})
+store.dispatch(addGoalAction({ id: 0, name: "Learn Redux" }));
 
-store.dispatch({
-  type: ADD_GOAL,
-  goal: {
+store.dispatch(
+  addGoalAction({
     id: 1,
-    name: 'Lose 20 pounds'
-  }
-})
+    name: "Lose 20 pounds",
+  })
+);
 
-store.dispatch({
-  type: REMOVE_GOAL,
-  id: 0
-}) 
+store.dispatch(removeGoalAction(0));
