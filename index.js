@@ -1,5 +1,41 @@
-// STATE MANAGEMENT
+// LIBRARY CODE
+function createStore(reducer) {
+  //Store should have four parts:
 
+  // 1. The state
+  let state;
+  let listeners = [];
+
+  // 2. Get the state
+  const getState = () => state;
+
+  // 3. Listen to changes on the state
+  const subscribe = (listener) => {
+    listeners.push(listener);
+
+    // Unsubscribes listener when called
+    return () => {
+      listeners = listeners.filter((l) => l !== listener);
+    };
+  };
+
+  // 4. Updates the state
+  const dispatch = (action) => {
+    state = reducer(state, action);
+
+    // loop over listeners and invoke them
+    listeners.forEach((listener) => listener());
+  };
+
+  return {
+    getState,
+    subscribe,
+    dispatch,
+  };
+}
+
+
+// APP CODE
 // Use action type constants to avoid typos
 const ADD_TODO = "ADD_TODO";
 const REMOVE_TODO = "REMOVE_TODO";
@@ -59,41 +95,7 @@ function app (state = {}, action) {
   }
 }
 
-// Creating store
-function createStore(reducer) {
-  //Store should have four parts:
 
-  // 1. The state
-  let state;
-  let listeners = [];
-
-  // 2. Get the state
-  const getState = () => state;
-
-  // 3. Listen to changes on the state
-  const subscribe = (listener) => {
-    listeners.push(listener);
-
-    // Unsubscribes listener when called
-    return () => {
-      listeners = listeners.filter((l) => l !== listener);
-    };
-  };
-
-  // 4. Updates the state
-  const dispatch = (action) => {
-    state = reducer(state, action);
-
-    // loop over listeners and invoke them
-    listeners.forEach((listener) => listener());
-  };
-
-  return {
-    getState,
-    subscribe,
-    dispatch,
-  };
-}
 
 const store = createStore(app);
 
@@ -132,17 +134,17 @@ store.dispatch({
 })
 
 store.dispatch({
-  type: 'REMOVE_TODO',
+  type: REMOVE_TODO,
   id: 1
 })
 
 store.dispatch({
-  type: 'TOGGLE_TODO',
+  type: TOGGLE_TODO,
   id: 0
 })
 
 store.dispatch({
-  type: 'ADD_GOAL',
+  type: ADD_GOAL,
   goal: {
     id: 0,
     name: 'Learn Redux'
