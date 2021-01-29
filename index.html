@@ -2,7 +2,7 @@
 <html>
   <head>
     <title>Todos/Goals</title>
-    <script src='https://cdnjs.cloudflare.com/ajax/libs/redux/4.0.5/redux.min.js'></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/redux/4.0.5/redux.min.js"></script>
   </head>
   <body>
     <div>
@@ -74,12 +74,30 @@
         };
       };
 
+      const checker = (store) => (next) => (action) => {
+        if (
+          action.type === ADD_TODO &&
+          action.todo.name.toLowerCase().indexOf("bitcoin") !== -1
+        ) {
+          return alert("Nope. That's a bad idea!");
+        }
+
+        if (
+          action.type === ADD_GOAL &&
+          action.goal.name.toLowerCase().indexOf("bitcoin") !== -1
+        ) {
+          return alert("Nope. That's a bad idea!");
+        }
+
+        return next(action);
+      };
+
       //Rule #2 Pure Functions - has 3 characteristics:
       /*
     1. They always return the same result if the same arguments are passed in.
     2.  Depend only on arguments passed into them --> do not access values outside of their scope
     3.  Never produce side effects (e.g. Ajax requests, mutate, etc.)
-*/
+  */
 
       // Reducer function - a pure function
       function todos(state = [], action) {
@@ -116,10 +134,13 @@
         }
       }
 
-      const store = Redux.createStore(Redux.combineReducers({
-        todos,
-        goals,
-      }))
+      const store = Redux.createStore(
+        Redux.combineReducers({
+          todos,
+          goals,
+        }),
+        Redux.applyMiddleware(checker)
+      );
 
       const unsubscribe = store.subscribe(() => {
         // listener function
@@ -137,7 +158,6 @@
       // DOM code
 
       function addTodoToDOM(todo) {
-
         // Add
         const node = document.createElement("li");
         const text = document.createTextNode(todo.name);
@@ -147,7 +167,7 @@
         const removeBtn = createRemoveButton(() => {
           store.dispatch(removeTodoAction(todo.id));
         });
-        node.appendChild(removeBtn)
+        node.appendChild(removeBtn);
 
         // Toggle
         node.style.textDecoration = todo.complete ? "line-through" : "none";
@@ -159,7 +179,6 @@
       }
 
       function addGoalToDOM(goal) {
-
         // Add
         const node = document.createElement("li");
         const text = document.createTextNode(goal.name);
@@ -169,7 +188,7 @@
         const removeBtn = createRemoveButton(() => {
           store.dispatch(removeGoalAction(goal.id));
         });
-        node.appendChild(removeBtn)
+        node.appendChild(removeBtn);
 
         document.getElementById("goals").appendChild(node);
       }
