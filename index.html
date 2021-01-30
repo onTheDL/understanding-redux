@@ -3,6 +3,9 @@
   <head>
     <title>Todos/Goals</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/redux/4.0.5/redux.min.js"></script>
+    <script src="https://unpkg.com/react@16.13.1/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@16.13.1/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6.26.0/babel.min.js"></script>
   </head>
   <body>
     <div>
@@ -18,6 +21,11 @@
       <button id="goalBtn">Add Goal</button>
       <ul id="goals"></ul>
     </div>
+
+    <hr />
+
+    <!-- React Component -->
+    <div id="app"></div>
 
     <script type="text/javascript">
       // Id generator
@@ -74,7 +82,6 @@
         };
       };
 
-
       // Middleware - ui
       const checker = (store) => (next) => (action) => {
         if (
@@ -95,14 +102,14 @@
       };
 
       // Middleware - development
-      const logger = store => next => action => {
-        console.group(action.type)
-        console.log('The action: ', action)
-        const result = next(action)
-        console.log('The new state: ', store.getState());
-        console.groupEnd()
-        return result
-      }
+      const logger = (store) => (next) => (action) => {
+        console.group(action.type);
+        console.log("The action: ", action);
+        const result = next(action);
+        console.log("The new state: ", store.getState());
+        console.groupEnd();
+        return result;
+      };
 
       //Rule #2 Pure Functions - has 3 characteristics:
       /*
@@ -243,6 +250,51 @@
       document.getElementById("todoBtn").addEventListener("click", addTodo);
 
       document.getElementById("goalBtn").addEventListener("click", addGoal);
+    </script>
+
+    <script type="text/babel">
+      function List(props) {
+        return (
+          <ul>
+            <li>LIST</li>
+          </ul>
+        );
+      }
+
+      class Todos extends React.Component {
+        render() {
+          return (
+            <div>
+              TODOS
+              <List />
+            </div>
+          );
+        }
+      }
+
+      class Goals extends React.Component {
+        render() {
+          return (
+            <div>
+              GOALS
+              <List />
+            </div>
+          );
+        }
+      }
+
+      class App extends React.Component {
+        render() {
+          return (
+            <div>
+              <Todos />
+              <Goals />
+            </div>
+          );
+        }
+      }
+
+      ReactDOM.render(<App />, document.getElementById("app"));
     </script>
   </body>
 </html>
