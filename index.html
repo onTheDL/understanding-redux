@@ -74,6 +74,8 @@
         };
       };
 
+
+      // Middleware - ui
       const checker = (store) => (next) => (action) => {
         if (
           action.type === ADD_TODO &&
@@ -91,6 +93,16 @@
 
         return next(action);
       };
+
+      // Middleware - development
+      const logger = store => next => action => {
+        console.group(action.type)
+        console.log('The action: ', action)
+        const result = next(action)
+        console.log('The new state: ', store.getState());
+        console.groupEnd()
+        return result
+      }
 
       //Rule #2 Pure Functions - has 3 characteristics:
       /*
@@ -139,7 +151,7 @@
           todos,
           goals,
         }),
-        Redux.applyMiddleware(checker)
+        Redux.applyMiddleware(checker, logger)
       );
 
       const unsubscribe = store.subscribe(() => {
