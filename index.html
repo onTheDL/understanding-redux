@@ -154,12 +154,12 @@
       }
 
       function loading(state = true, action) {
-        switch(action.type) {
-          case RECEIVE_DATA :
-            return false
-          
-          default :
-            return state
+        switch (action.type) {
+          case RECEIVE_DATA:
+            return false;
+
+          default:
+            return state;
         }
       }
 
@@ -198,24 +198,32 @@
       class Todos extends React.Component {
         addItem = (e) => {
           e.preventDefault();
-          const name = this.input.value;
-          this.input.value = "";
 
-          this.props.store.dispatch(
-            addTodoAction({
-              id: generateId(),
-              name,
-              complete: false,
+          // Persist data
+          return API.saveTodo(this.input.value)
+            .then((todo) => {
+              this.props.store.dispatch(addTodoAction(todo));
+              this.input.value = "";
             })
-          );
+            .catch(() => alert('An error occured. Try again.'));
         };
 
         removeItem = (todo) => {
+          // Optimistic Update
           this.props.store.dispatch(removeTodoAction(todo.id));
+          return API.deleteTodo(todo.id).catch(() => {
+            this.props.store.dispatch(addTodoAction(todo));
+            alert("An error occured.  Try again.");
+          });
         };
 
         toggleItem = (todo) => {
+          // Optimistic Toggle
           this.props.store.dispatch(toggleTodoAction(todo.id));
+          return API.saveTodoToggle(todo.id).catch(() => {
+            this.props.store.dispatch(toggleTodoAction(todo.id));
+            alert("An error occured.  Please try again.");
+          });
         };
 
         render() {
@@ -243,19 +251,21 @@
       class Goals extends React.Component {
         addItem = (e) => {
           e.preventDefault();
-          const name = this.input.value;
-          this.input.value = "";
 
-          this.props.store.dispatch(
-            addGoalAction({
-              id: generateId(),
-              name,
-              complete: false,
-            })
+          return API.saveGoal(this.input.value).then((goal) => {
+            this.props.store.dispatch(
+            addGoalAction(goal)
           );
+          this.input.value = "";
+          }).catch(() => alert('An error occured.  Please try again'))
+          
         };
         removeItem = (goal) => {
           this.props.store.dispatch(removeGoalAction(goal.id));
+          return API.deleteGoal(goal.id).catch(() => {
+            this.props.store.dispatch(addGoalAction(goal));
+            alert("An error occured. Please try again.");
+          });
         };
         render() {
           return (
@@ -279,7 +289,7 @@
 
           Promise.all([API.fetchTodos(), API.fetchGoals()]).then(
             ([todos, goals]) => {
-              store.dispatch(receiveDataAction(todos, goals))
+              store.dispatch(receiveDataAction(todos, goals));
             }
           );
 
@@ -291,7 +301,7 @@
           const { todos, goals, loading } = store.getState();
 
           if (loading === true) {
-            return <h3>Loading</h3>
+            return <h3>Loading</h3>;
           }
 
           return (
