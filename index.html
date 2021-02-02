@@ -76,6 +76,39 @@
         };
       }
 
+      // Data fetching logic
+      const handleDeleteTodo = (todo) => {
+        return (dispatch) => {
+          // Optimistic Update
+          dispatch(removeTodoAction(todo.id));
+          return API.deleteTodo(todo.id).catch(() => {
+            dispatch(addTodoAction(todo));
+            alert("An error occured.  Try again.");
+          });
+        };
+      };
+
+      function handleDeleteGoal(goal) {
+        return (dispatch) => {
+          dispatch(removeGoalAction(goal.id));
+          return API.deleteGoal(goal.id).catch(() => {
+            dispatch(addGoalAction(goal));
+            alert("An error occured. Please try again.");
+          });
+        };
+      }
+
+      function handleAddGoal(name, callback) {
+        return (dispatch) => {
+          return API.saveGoal(name)
+            .then((name) => {
+              dispatch(addGoalAction(name));
+              callback();
+            })
+            .catch(() => alert("An error occured.  Please try again"));
+        };
+      }
+
       // Middleware - ui
       const checker = (store) => (next) => (action) => {
         if (
@@ -105,12 +138,19 @@
         return result;
       };
 
+      const thunk = (store) => (next) => (action) => {
+        if (typeof action === "function") {
+          return action(store.dispatch);
+        }
+        return next(action);
+      };
+
       //Rule #2 Pure Functions - has 3 characteristics:
       /*
-    1. They always return the same result if the same arguments are passed in.
-    2.  Depend only on arguments passed into them --> do not access values outside of their scope
-    3.  Never produce side effects (e.g. Ajax requests, mutate, etc.)
-  */
+        1. They always return the same result if the same arguments are passed in.
+        2.  Depend only on arguments passed into them --> do not access values outside of their scope
+        3.  Never produce side effects (e.g. Ajax requests, mutations, etc.)
+      */
 
       // Reducer function - a pure function
       function todos(state = [], action) {
@@ -169,7 +209,7 @@
           goals,
           loading,
         }),
-        Redux.applyMiddleware(checker, logger)
+        Redux.applyMiddleware(checker, logger, thunk)
       );
     </script>
 
@@ -205,16 +245,11 @@
               this.props.store.dispatch(addTodoAction(todo));
               this.input.value = "";
             })
-            .catch(() => alert('An error occured. Try again.'));
+            .catch(() => alert("An error occured. Try again."));
         };
 
         removeItem = (todo) => {
-          // Optimistic Update
-          this.props.store.dispatch(removeTodoAction(todo.id));
-          return API.deleteTodo(todo.id).catch(() => {
-            this.props.store.dispatch(addTodoAction(todo));
-            alert("An error occured.  Try again.");
-          });
+          this.props.store.dispatch(handleDeleteTodo(todo));
         };
 
         toggleItem = (todo) => {
@@ -252,20 +287,14 @@
         addItem = (e) => {
           e.preventDefault();
 
-          return API.saveGoal(this.input.value).then((goal) => {
-            this.props.store.dispatch(
-            addGoalAction(goal)
-          );
-          this.input.value = "";
-          }).catch(() => alert('An error occured.  Please try again'))
-          
+          this.props.store.dispatch(handleAddGoal(
+            this.input.value, 
+            () => this.input.value = ''
+          ))
+
         };
         removeItem = (goal) => {
-          this.props.store.dispatch(removeGoalAction(goal.id));
-          return API.deleteGoal(goal.id).catch(() => {
-            this.props.store.dispatch(addGoalAction(goal));
-            alert("An error occured. Please try again.");
-          });
+          this.props.store.dispatch(handleDeleteGoal(goal));
         };
         render() {
           return (
