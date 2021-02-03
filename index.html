@@ -7,6 +7,7 @@
     <script src="https://unpkg.com/react-dom@16.13.1/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/babel-standalone@6.26.0/babel.min.js"></script>
     <script src="https://ui.dev/goals-todos-api/index.js"></script>
+    <script src='https://unpkg.com/redux-thunk@2.3.0/dist/redux-thunk.min.js'></script>
   </head>
   <body>
     <!-- React UI -->
@@ -88,6 +89,28 @@
         };
       };
 
+      function handleAddTodo(name, callback) {
+        return (dispatch) => {
+          // Persist data
+          return API.saveTodo(name)
+            .then((name) => {
+              dispatch(addTodoAction(name));
+              callback();
+            })
+            .catch(() => alert("An error occured. Try again."));
+        };
+      }
+
+      function handleToggle(id) {
+        return (dispatch) => {
+          dispatch(toggleTodoAction(id));
+          return API.saveTodoToggle(id).catch(() => {
+            dispatch(toggleTodoAction(id));
+            alert("An error occured.  Please try again.");
+          });
+        };
+      }
+
       function handleDeleteGoal(goal) {
         return (dispatch) => {
           dispatch(removeGoalAction(goal.id));
@@ -106,6 +129,16 @@
               callback();
             })
             .catch(() => alert("An error occured.  Please try again"));
+        };
+      }
+
+      function handleInitialData() {
+        return (dispatch) => {
+          Promise.all([API.fetchTodos(), API.fetchGoals()]).then(
+            ([todos, goals]) => {
+              dispatch(receiveDataAction(todos, goals));
+            }
+          );
         };
       }
 
@@ -138,12 +171,15 @@
         return result;
       };
 
+      // Use ReduxThunk library instead
+      /*
       const thunk = (store) => (next) => (action) => {
         if (typeof action === "function") {
           return action(store.dispatch);
         }
         return next(action);
       };
+      */
 
       //Rule #2 Pure Functions - has 3 characteristics:
       /*
@@ -209,7 +245,7 @@
           goals,
           loading,
         }),
-        Redux.applyMiddleware(checker, logger, thunk)
+        Redux.applyMiddleware(checker, logger, ReduxThunk.default)
       );
     </script>
 
@@ -238,14 +274,9 @@
       class Todos extends React.Component {
         addItem = (e) => {
           e.preventDefault();
-
-          // Persist data
-          return API.saveTodo(this.input.value)
-            .then((todo) => {
-              this.props.store.dispatch(addTodoAction(todo));
-              this.input.value = "";
-            })
-            .catch(() => alert("An error occured. Try again."));
+          this.props.store.dispatch(
+            handleAddTodo(this.input.value, () => (this.input.value = ""))
+          );
         };
 
         removeItem = (todo) => {
@@ -254,11 +285,7 @@
 
         toggleItem = (todo) => {
           // Optimistic Toggle
-          this.props.store.dispatch(toggleTodoAction(todo.id));
-          return API.saveTodoToggle(todo.id).catch(() => {
-            this.props.store.dispatch(toggleTodoAction(todo.id));
-            alert("An error occured.  Please try again.");
-          });
+          this.props.store.dispatch(handleToggle(todo.id));
         };
 
         render() {
@@ -286,12 +313,9 @@
       class Goals extends React.Component {
         addItem = (e) => {
           e.preventDefault();
-
-          this.props.store.dispatch(handleAddGoal(
-            this.input.value, 
-            () => this.input.value = ''
-          ))
-
+          this.props.store.dispatch(
+            handleAddGoal(this.input.value, () => (this.input.value = ""))
+          );
         };
         removeItem = (goal) => {
           this.props.store.dispatch(handleDeleteGoal(goal));
@@ -315,13 +339,7 @@
       class App extends React.Component {
         componentDidMount() {
           const { store } = this.props;
-
-          Promise.all([API.fetchTodos(), API.fetchGoals()]).then(
-            ([todos, goals]) => {
-              store.dispatch(receiveDataAction(todos, goals));
-            }
-          );
-
+          store.dispatch(handleInitialData())
           store.subscribe(() => this.forceUpdate());
         }
 
